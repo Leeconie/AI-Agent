@@ -1,0 +1,60 @@
+# Mira: Model-Integrated Routing & Adaptation
+
+Mira 是一种整合了部署，请求，上下文管理的大模型调用库，支持 vllm，transformers，第三方 api 接口，设计目的是为了更加自由地设计 agent，能够获取概率，注意力等复杂信息，用户可以自己使用第三方模型 API，也可以自己部署私有化大模型，mira 支持用户使用 Openai 兼容协议完成所有 agent 的开发
+
+## 设计初衷
+开源社区有大量的大模型服务部署和 agent 框架，为何仍然要重造一个轮子？
+- 已知代码过于庞大，且功能过于复杂，用户无法根据自己的需求进行定制
+- 随着长期记忆，可持续学习，强化学习微调，3D 物理世界交互等新算法需求的增加
+- 需要一个上下文管理更加灵活，工具执行可自主定义，支持输出在线优化所必须的概率和 logit 等信息，可扩展的 agent 框架兼容新的范式
+mira 就是一个尝试给 agent 提供这种工具的尝试
+
+
+## 🌟 Features
+- 兼容 OpenAI 协议
+- 更加方便地 Rollout 获取概率和 pass@K 样本
+- 支持本地 vLLM、HF Transformers 模型
+- 兼容 OpenAI、Claude、Gemini、OpenRouter、Qwen、Seed 等模型（第三方的通常拿不到概率和注意力）
+- 支持采用 BaseModel 类实现自定义的函数 tool，提供 tool 运行的线程管理，方便用户设计重型、复杂、带状态的函数功能
+- 支持用户自定义上下文工程处理，支持更加灵活的 agent 设计
+
+## TODO-LIST
+- [ ] 基于状态机的自动上下文管理
+- [ ] HF Transformers 原生模型部署支持
+- [ ] 能够输出 token level entropy 以及短序列的 attention
+- [ ] 方便后续电路图生成，用于可解释
+- [ ] 兼容 OpenAI harmony 协议
+
+## 🚀 Installation
+
+### Prerequisites
+- Ubuntu >= 22.04 or Centos >= 7
+- CUDA-compatible GPU (for local inference, better for cuda 12.4+)
+
+### Using Conda (Recommended)
+
+```bash
+# Create a new environment
+conda create -n mira python=3.11
+conda activate mira
+
+# Clone the repository
+git clone https://github.com/yourusername/mira.git
+cd mira
+
+# Install dependencies
+pip install --upgrade pip setuptools
+pip install -e .
+```
+
+## Using API
+[Simple Using Example](tests/test_simple.py)
+[MultiTool Using Example](tests/test_multi_tool.py)
+[Struct Output Example](tests/test_struct_output.py)
+
+if you want to run the above example, you can use the following command:
+```bash
+cd mira
+python -m tests.test_simple --model 'doubao/ep-xxxx' --api_key 'xxx' --base_url 'https://ark.cn-beijing.volces.com/api/v3'
+```
+

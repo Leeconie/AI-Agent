@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻溯源验证器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .sources {
+            margin-top: 10px;
+        }
+        .source {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            background-color: #fff;
+        }
+        .source-title {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .source-link {
+            color: #28a745;
+            text-decoration: none;
+        }
+        .source-link:hover {
+            text-decoration: underline;
+        }
+        .reliability {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .reliability-high {
+            color: #28a745;
+        }
+        .reliability-medium {
+            color: #ffc107;
+        }
+        .reliability-low {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📰 新闻溯源验证器</h1>
+        <p style="text-align: center; color: #666;">验证新闻声明的真实性和可靠性</p>
+        
+        <form id="traceForm">
+            <div class="form-group">
+                <label for="claim">请输入要验证的新闻声明：</label>
+                <input type="text" id="claim" placeholder="例如：某种新药可以完全治愈癌症" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="depth">溯源深度（1-5）：</label>
+                <input type="number" id="depth" min="1" max="5" value="2">
+            </div>
+            
+            <button type="submit" id="submitBtn">开始验证</button>
+        </form>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('traceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const claim = document.getElementById('claim').value;
+            const depth = parseInt(document.getElementById('depth').value);
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            // 禁用按钮并显示加载状态
+            submitBtn.disabled = true;
+            submitBtn.textContent = '验证中...';
+            resultDiv.innerHTML = '<div class="loading">正在验证声明，请稍候...</div>';
+            
+            try {
+                // 确保使用正确的API端点
+                const response = await fetch('/api/trace', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        claim: claim,
+                        max_depth: depth
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 显示结果
+                displayResult(data);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>错误：</strong>${error.message || '验证过程中发生错误'}
+                    </div>
+                `;
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = '开始验证';
+            }
+        });
+        
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            
+            let sourcesHtml = '';
+            data.steps.forEach(step => {
+                sourcesHtml += `<h3>🔍 搜索步骤 ${step.step}: "${step.query}"</h3>`;
+                sourcesHtml += '<div class="sources">';
+                step.sources.forEach((source, index) => {
+                    sourcesHtml += `
+                        <div class="source">
+                            <div class="source-title">${source.title}</div>
+                            <div><a href="${source.link}" class="source-link" target="_blank">${source.link}</a></div>
+                            <div>${source.snippet}</div>
+                            <div><small>发布日期: ${source.date}</small></div>
+                        </div>
+                    `;
+                });
+                sourcesHtml += '</div>';
+            });
+            
+            // 可靠性评分样式
+            let reliabilityClass = 'reliability-low';
+            if (data.reliability >= 0.7) {
+                reliabilityClass = 'reliability-high';
+            } else if (data.reliability >= 0.4) {
+                reliabilityClass = 'reliability-medium';
+            }
+            
+            let reliabilityText = '';
+            if (data.reliability >= 0.7) {
+                reliabilityText = '高';
+            } else if (data.reliability >= 0.4) {
+                reliabilityText = '中';
+            } else {
+                reliabilityText = '低';
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <h2>📋 验证结论</h2>
+                    <div>
+                        <p><strong>声明：</strong>${data.claim}</p>
+                        <p><strong>可靠性评分：</strong>
+                            <span class="${reliabilityClass}">${data.reliability.toFixed(1)} (${reliabilityText})</span>
+                        </p>
+                        <p><strong>详细结论：</strong></p>
+                        <div>${data.conclusion}</div>
+                    </div>
+                    
+                    <h2>📚 搜索来源</h2>
+                    ${sourcesHtml}
+                </div>
+            `;
+        }
+        
+        function getReliabilityClass(reliability) {
+            if (reliability >= 0.7) return 'reliability-high';
+            if (reliability >= 0.4) return 'reliability-medium';
+            return 'reliability-low';
+        }
+    </script>
+</body>
+</html>
