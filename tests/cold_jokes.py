@@ -237,7 +237,7 @@ async def main():
     agent = ColdJokeGeneratorAgent(llm)
     
     # 从现有的JSON文件读取冷笑话数据
-    input_json_file = ".\mira\CFunSet.json"
+    input_json_file = "你的冷笑话数据集.json"
     
     try:
         with open(input_json_file, 'r', encoding='utf-8') as f:
