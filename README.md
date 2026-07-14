@@ -100,7 +100,7 @@ pip install -e ".[all]"
 
 | API 服务 | 用途 | 获取地址 | 必需 |
 |---------|------|---------|------|
-| **火山引擎 Ark (豆包)** | 大模型调用 | https://www.volcengine.com/product/ark | ✅ 必需 |
+| **火山引擎 Ark (豆包)** | 大模型调用 | https://www.volcengine.com/product/ark | 可更换 |
 | **Serper** | 谷歌搜索 | https://serper.dev/ | ✅ 必需（新闻溯源） |
 
 #### 2.2 配置步骤
