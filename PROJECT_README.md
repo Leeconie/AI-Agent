@@ -28,6 +28,8 @@ da_zuo_ye/
     │   ├── test_simple.py             # 简单使用示例
     │   ├── test_tool.py               # 工具调用示例
     │   ├── test_struct_output.py      # 结构化输出示例
+    │   ├── test_agent.py              # 新闻溯源 Agent 示例
+    │   ├── cold_jokes.py              # 冷笑话数据生成
     │   └── eval/                      # 评估脚本
     ├── wangye/                        # Web 应用
     │   └── news_tracer/               # 新闻溯源验证器
@@ -38,7 +40,7 @@ da_zuo_ye/
     │       ├── ml_strategy.py         # 机器学习策略
     │       ├── strategy_backtester.py # 策略回测
     │       └── index.html             # 备用 HTML 页面
-    ├── .env                           # 环境变量配置
+    ├── .env.example                   # 环境变量模板（复制为 .env）
     ├── pyproject.toml                 # 项目配置文件
     ├── README.md                      # 原项目文档
     └── PROJECT_README.md              # 本文档
@@ -74,7 +76,7 @@ da_zuo_ye/
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
 ### 步骤 1：安装依赖
 
@@ -90,82 +92,154 @@ pip install -e .
 pip install -e ".[all]"
 ```
 
-### 步骤 2：配置环境变量
+### 步骤 2：配置 API 密钥
 
-项目已包含 `.env` 文件，主要配置项：
+#### 2.1 必需的 API 密钥
+
+要运行项目，你需要配置以下 API 密钥：
+
+| API 服务 | 用途 | 获取地址 | 必需 |
+|---------|------|---------|------|
+| **火山引擎 Ark (豆包)** | 大模型调用 | https://www.volcengine.com/product/ark | ✅ 必需 |
+| **Serper** | 谷歌搜索 | https://serper.dev/ | ✅ 必需（新闻溯源） |
+
+#### 2.2 配置步骤
+
+```bash
+# 1. 复制环境变量模板
+cd mira
+copy .env.example .env  # Windows
+# 或
+cp .env.example .env    # Linux/macOS
+```
+
+然后打开 `.env` 文件，填入你的 API 密钥：
 
 ```env
+# ==============================================
+# 必需配置（必须填写）
+# ==============================================
+
 # 豆包 API（火山引擎 Ark）
-ARK_API_KEY = "your-ark-api-key-here"
+# 获取地址：https://www.volcengine.com/product/ark
+ARK_API_KEY = "在这里填入你的 Ark API Key"
 ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 
-# Serper API（用于搜索）
-SERPER_API_KEY = "your-serper-api-key-here"
+# Serper API（用于谷歌搜索）
+# 获取地址：https://serper.dev/
+SERPER_API_KEY = "在这里填入你的 Serper API Key"
 
-# 其他可选配置
+# ==============================================
+# 可选配置（根据需要填写）
+# ==============================================
+
+# OpenAI API
 OPENAI_API_KEY = ""
+OPENAI_BASE_URL = "https://api.openai-proxy.com/v1"
+
+# OpenRouter API（聚合多个模型）
 OPENROUTER_API_KEY = ""
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+# Hugging Face Token（用于下载模型）
 HF_TOKEN = ""
+```
+
+#### 2.3 验证配置
+
+配置完成后，运行简单测试验证：
+
+```bash
+cd mira
+python -m tests.test_simple
+```
+
+### 步骤 3：启动应用
+
+#### 方式一：启动新闻溯源验证器（推荐）
+
+需要同时启动后端和前端两个服务。
+
+#### 终端 1 - 启动后端服务
+
+```bash
+cd mira\wangye\news_tracer
+python server.py
+```
+
+✅ **成功标志**：看到 `Uvicorn running on http://0.0.0.0:8000`
+
+- 后端地址：`http://localhost:8000`
+- API 文档：`http://localhost:8000/docs`
+
+#### 终端 2 - 启动前端应用
+
+```bash
+cd mira\wangye\news_tracer
+streamlit run streamlit_app.py
+```
+
+✅ **成功标志**：浏览器自动打开 `http://localhost:8501`
+
+---
+
+### 方式二：运行测试脚本
+
+项目提供了多个测试脚本，按难度递进：
+
+#### 🟢 入门级测试
+
+```bash
+# 测试简单对话（最简单）
+cd mira
+python -m tests.test_simple
+```
+
+#### 🟡 进阶级测试
+
+```bash
+# 测试工具调用
+python -m tests.test_tool
+
+# 测试结构化输出
+python -m tests.test_struct_output
+```
+
+#### 🔴 高级测试
+
+```bash
+# 测试新闻溯源 Agent（完整应用）
+python -m tests.test_agent
 ```
 
 ---
 
-## 启动方式
-
-### 方式一：启动新闻溯源验证器（推荐）
-
-需要同时启动后端和前端两个服务。
-
-**终端 1 - 启动后端服务：**
-
-```bash
-cd .\mira\wangye\news_tracer
-python server.py
-```
-
-后端服务将在 `http://localhost:8000` 启动，API 文档访问：`http://localhost:8000/docs`
-
-**终端 2 - 启动前端应用：**
-
-```bash
-cd .\mira\wangye\news_tracer
-streamlit run streamlit_app.py
-```
-
-前端应用将在浏览器中自动打开，通常是 `http://localhost:8501`
-
-### 方式二：测试 Mira 框架
-
-```bash
-cd .\mira
-python -m tests.test_simple
-```
-
-其他测试示例：
-
-- `python -m tests.test_tool` - 测试工具调用
-- `python -m tests.test_struct_output` - 测试结构化输出
-
 ### 方式三：启动 Mira API 服务
+
+如果你想把 Mira 作为 OpenAI 兼容的 API 服务使用：
 
 ```bash
 mira-server
 ```
 
+服务将在 `http://localhost:8090` 启动，兼容 OpenAI SDK。
+
 ---
 
-## 使用说明
+## 📖 使用说明
 
 ### 1. 新闻溯源验证器使用
 
-1. 启动后端和前端服务
-2. 在浏览器中打开 Streamlit 应用
-3. **新闻溯源**标签页：
-   - 输入要验证的新闻声明
-   - 选择溯源深度
+1. 确保已配置 `ARK_API_KEY` 和 `SERPER_API_KEY`
+2. 启动后端和前端服务（见"步骤 3"）
+3. 在浏览器中打开 Streamlit 应用
+4. **新闻溯源**标签页：
+   - 输入要验证的新闻声明（例如："人工智能将取代程序员"）
+   - 选择溯源深度（1-3层）
    - 点击"开始验证"
-4. **金融数据分析**标签页：
-   - 输入公司名称查询股票代码
+5. **金融数据分析**标签页：
+   - 输入公司名称（例如："特斯拉"、"阿里巴巴"）
+   - 查询股票代码
    - 进行技术分析、策略回测
    - 查看 AI 投研报告
 
@@ -180,27 +254,60 @@ import os
 class GoogleSearchTool(LLMTool):
     """搜索谷歌获取信息"""
     query: str = Field(..., description="搜索查询")
-  
+    
     def __call__(self):
         # 实现搜索逻辑
-        pass
+        api_key = os.getenv("SERPER_API_KEY")
+        # ...
 
-# 使用模型
+# 配置模型参数
 args = OpenAIArgs(
     model="doubao/doubao-1-5-pro-32k-250115",
     api_key=os.getenv("ARK_API_KEY"),
-    base_url=os.getenv("ARK_BASE_URL")
+    base_url=os.getenv("ARK_BASE_URL"),
+    temperature=0.7
 )
+
+# 初始化 LLM
 llm = OpenRouterLLM(args=args)
 
 # 发送消息
-messages = [HumanMessage(content="你好，请介绍一下自己")]
-response = await llm.forward(messages=messages)
+messages = [HumanMessage(content="介绍一下人工智能")]
+
+# 获取回复（自动处理工具调用）
+response = await llm.forward(messages=messages, tools=[GoogleSearchTool])
+print(response)
 ```
 
 ---
 
-## API 接口说明
+## 🧪 测试指南
+
+### 快速验证配置
+
+```bash
+cd mira
+
+# 测试 1：简单对话（验证 API Key 是否有效）
+python -m tests.test_simple
+
+# 测试 2：工具调用（验证搜索功能）
+python -m tests.test_tool
+```
+
+### 测试文件说明
+
+| 测试文件 | 功能 | 难度 |
+|---------|------|------|
+| `test_simple.py` | 基础对话 + 搜索工具 | ⭐ |
+| `test_tool.py` | 多工具协同（加法、乘法） | ⭐⭐ |
+| `test_struct_output.py` | 结构化 JSON 输出 | ⭐⭐ |
+| `test_agent.py` | 完整新闻溯源 Agent | ⭐⭐⭐ |
+| `cold_jokes.py` | 批量数据生成 | ⭐⭐⭐ |
+
+---
+
+## 📡 API 接口说明
 
 ### 新闻溯源 API
 
@@ -212,11 +319,11 @@ response = await llm.forward(messages=messages)
 | `/api/stock/strategy_recommend` | POST | AI 策略推荐  |
 | `/api/stock/strategy_report`    | POST | 生成投研报告 |
 
-完整 API 文档请访问：`http://localhost:8000/docs`
+**完整 API 文档**：启动后端后访问 `http://localhost:8000/docs`
 
 ---
 
-## 技术栈
+## 🛠️ 技术栈
 
 ### 后端
 
@@ -234,20 +341,23 @@ response = await llm.forward(messages=messages)
 
 - **Pandas** - 数据处理
 - **NumPy** - 数值计算
-- **yfinance** - 金融数据（如适用）
+- **yfinance** - 金融数据
 
 ---
 
-## 开发建议
+## 💡 开发建议
 
 1. **环境隔离**：建议使用 Conda 或 venv 创建虚拟环境
-2. **API 密钥**：注意保护 `.env` 文件中的密钥信息
+2. **API 密钥保护**：`.env` 文件已在 `.gitignore` 中，不会被提交到 GitHub
 3. **日志调试**：设置 `CHONKIE_LOG_LEVEL=1` 开启详细日志
-4. **本地模型**：如需使用本地模型，安装 `vllm` 和相关依赖
+4. **本地模型**：如需使用本地模型，安装 `vllm` 和相关依赖：
+   ```bash
+   pip install -e ".[all]"
+   ```
 
 ---
 
-## 常见问题
+## ❓ 常见问题
 
 ### Q: 后端启动失败？
 
@@ -255,23 +365,32 @@ A: 检查端口 8000 是否被占用，或修改 `server.py` 中的端口号
 
 ### Q: Streamlit 无法连接后端？
 
-A: 确保后端服务已启动，并检查 `streamlit_app.py` 中的 `API_BASE_URL` 配置
+A: 确保后端服务已启动，并检查 `streamlit_app.py` 中的 `API_BASE_URL` 配置（通常是 `http://localhost:8000`）
 
 ### Q: 搜索功能不工作？
 
-A: 检查 `SERPER_API_KEY` 是否正确配置
+A: 检查 `SERPER_API_KEY` 是否正确配置，并确认 Serper 账户有余额
+
+### Q: API 返回 401 未授权？
+
+A: 检查 `.env` 文件中的 `ARK_API_KEY` 是否正确
+
+### Q: 在哪里获取 API Key？
+
+- **Ark (豆包)**: https://www.volcengine.com/product/ark
+- **Serper**: https://serper.dev/
 
 ---
 
-## 许可证
+## 📄 许可证
 
 MIT License
 
 ---
 
-## 联系方式
+## 👥 联系方式
 
 - 项目作者：leeconie
 - 邮箱：1730112483@qq.com
-- mira作者：luyukun
+- Mira 原作者：luyukun
 - 邮箱：lcyqky@icloud.com
